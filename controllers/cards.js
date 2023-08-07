@@ -38,27 +38,35 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-  Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .populate('owner')
-    .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка с таким _id не найдена' });
-        return;
-      }
-      res.send(card);
-    })
-    .catch(() => res.status(404).send({ message: 'Карточка с таким _id не найдена' }));
+  if (req.params.userId.length === 24) {
+    Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
+      .populate(['owner', 'likes'])
+      .then((card) => {
+        if (!card) {
+          res.status(404).send({ message: 'Карточка с таким _id не найдена' });
+          return;
+        }
+        res.send(card);
+      })
+      .catch(() => res.status(404).send({ message: 'Карточка с таким _id не найдена' }));
+  } else {
+    res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
+  }
 };
 
 module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .populate('owner')
-    .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка с таким _id не найдена' });
-        return;
-      }
-      res.send(card);
-    })
-    .catch(() => res.status(404).send({ message: 'Карточка с таким _id не найдена' }));
+  if (req.params.userId.length === 24) {
+    Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
+      .populate(['owner', 'likes'])
+      .then((card) => {
+        if (!card) {
+          res.status(404).send({ message: 'Карточка с таким _id не найдена' });
+          return;
+        }
+        res.send(card);
+      })
+      .catch(() => res.status(404).send({ message: 'Карточка с таким _id не найдена' }));
+  } else {
+    res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
+  }
 };
