@@ -26,15 +26,19 @@ module.exports.getCards = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        res.status(404).send({ message: 'Карточка с таким _id не найдена' });
-        return;
-      }
-      res.send({ message: 'Карточка удалена' });
-    })
-    .catch(() => res.status(404).sen({ message: 'Карточка с таким _id не найдена' }));
+  if (req.params.cardId.length === 24) {
+    Card.findByIdAndDelete(req.params.cardId)
+      .then((card) => {
+        if (!card) {
+          res.status(404).send({ message: 'Карточка с таким _id не найдена' });
+          return;
+        }
+        res.send({ message: 'Карточка удалена' });
+      })
+      .catch(() => res.status(404).sen({ message: 'Карточка с таким _id не найдена' }));
+  } else {
+    res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
+  }
 };
 
 module.exports.likeCard = (req, res) => {
