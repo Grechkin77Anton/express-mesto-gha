@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const handlerError = require('../utils/handlerError');
 
 module.exports.addUser = (req, res) => {
   const { name, about, avatar } = req.body;
@@ -20,20 +21,22 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  if (req.params.userId.length === 24) {
-    User.findById(req.params.userId)
-      .then((user) => {
-        if (!user) {
-          res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
-          return;
-        }
-        res.send(user);
-      })
-      .catch(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }));
-  } else {
-    res.status(400).send({ message: 'Некорректный _id пользователя' });
-  }
+  // if (req.params.userId.length === 24) {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        return;
+      }
+      res.send(user);
+    })
+    .catch((err) => handlerError(err, res));
+  // .catch(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }));
 };
+//   else {
+//     res.status(400).send({ message: 'Некорректный _id пользователя' });
+//   }
+// };
 
 module.exports.editDataUser = (req, res) => {
   const { name, about } = req.body;
