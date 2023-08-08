@@ -1,5 +1,6 @@
+const { default: mongoose } = require('mongoose');
 const User = require('../models/user');
-const handlerError = require('../utils/handlerError');
+// const handlerError = require('../utils/handlerError');
 
 module.exports.addUser = (req, res) => {
   const { name, about, avatar } = req.body;
@@ -21,22 +22,36 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  // if (req.params.userId.length === 24) {
   User.findById(req.params.userId)
+    .orFail()
     .then((user) => {
-      if (!user) {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
-        return;
-      }
       res.send(user);
     })
-    .catch((err) => handlerError(err, res));
-  // .catch(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }));
-};
-//   else {
+    .catch((err) => {
+      if (err instanceof mongoose.Error.CastError) {
+        res.status(400).send({ message: 'Некоректный _id' });
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+      } else {
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
+      }
+    });
+//   if (req.params.userId.length === 24) {
+//   User.findById(req.params.userId)
+//     .orFail()
+//     .then((user) => {
+//       if (!user) {
+//         res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+//         return;
+//       }
+//       res.send(user);
+//     })
+//     .catch((err) => handlerError(err, res));
+//   .catch(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }));
+// } else {
 //     res.status(400).send({ message: 'Некорректный _id пользователя' });
 //   }
-// };
+};
 
 module.exports.editDataUser = (req, res) => {
   const { name, about } = req.body;
