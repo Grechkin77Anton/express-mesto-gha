@@ -13,7 +13,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '64ccedb05a8554e40236e5c6', // вставьте сюда _id созданного в предыдущем пункте пользователя
+    _id: '64dcd5831ced4da0b1d34479', // вставьте сюда _id созданного в предыдущем пункте пользователя
   };
   next();
 });
@@ -23,6 +23,18 @@ app.use('/cards', require('./routes/cards'));
 
 app.use('*', (req, res) => {
   res.status(404).send({ message: 'Страница не найдена' });
+});
+
+app.use((err, req, res, next) => {
+  // если у ошибки нет статуса, выставляем 500
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    // проверяем статус и выставляем сообщение в зависимости от него
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
+  });
+  next();
 });
 
 app.listen(PORT);

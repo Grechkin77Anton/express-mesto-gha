@@ -1,27 +1,29 @@
-const { default: mongoose } = require('mongoose');
+// const {HTTP_STATUS_OK, HTTP_STATUS_CREATED } = require('http2').constants;
+const mongoose = require('mongoose');
 const User = require('../models/user');
-// const handlerError = require('../utils/handlerError');
+const BadRequestError = require('../errors/badRequest');
+const NotFoundError = require('../errors/notFoundErr');
 
-module.exports.addUser = (req, res) => {
+module.exports.addUser = (req, res, next) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+        next(new BadRequestError(err.message));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail()
     .then((user) => {
@@ -29,51 +31,41 @@ module.exports.getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(400).send({ message: 'Некоректный _id' });
+        next(new BadRequestError('Некоректный _id'));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(new NotFoundError('Пользователь по указанному _id не найден'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
-//   if (req.params.userId.length === 24) {
-//   User.findById(req.params.userId)
-//     .orFail()
-//     .then((user) => {
-//       if (!user) {
-//         res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
-//         return;
-//       }
-//       res.send(user);
-//     })
-//     .catch((err) => handlerError(err, res));
-//   .catch(() => res.status(404).send({ message: 'Пользователь по указанному _id не найден' }));
-// } else {
-//     res.status(400).send({ message: 'Некорректный _id пользователя' });
-//   }
 };
 
-module.exports.editDataUser = (req, res) => {
+module.exports.editDataUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: 'true', runValidators: true })
+    .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.message));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь по указанному _id не найден'));
       } else {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(err);
       }
     });
 };
 
-module.exports.editAvatarUser = (req, res) => {
+module.exports.editAvatarUser = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, { new: 'true', runValidators: true })
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.message));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь по указанному _id не найден'));
       } else {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(err);
       }
     });
 };

@@ -1,52 +1,47 @@
-const { default: mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 const Card = require('../models/card');
-// const handlerError = require('../utils/handlerError');
+const BadRequestError = require('../errors/badRequest');
+const NotFoundError = require('../errors/notFoundErr');
 
-module.exports.addCard = (req, res) => {
+module.exports.addCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
       res.send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.message));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
-module.exports.deleteCard = (req, res) => {
-  // if (req.params.cardId.length === 24) {
+module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndDelete(req.params.cardId)
     .orFail()
-    .then((card) => {
-      res.send(card);
+    .then(() => {
+      res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(400).send({ message: 'Некоректный _id' });
+        next(new BadRequestError('Некорректный _id карточки'));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(new NotFoundError('Карточка по указанному _id не найдена'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
-//    else {
-//     res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
-//   }
-// };
 
-module.exports.likeCard = (req, res) => {
-  // if (req.params.cardId.length === 24) {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
     .populate('owner')
     .orFail()
@@ -55,21 +50,16 @@ module.exports.likeCard = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(400).send({ message: 'Некоректный _id' });
+        next(new BadRequestError('Некорректный id карточки'));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(new NotFoundError('Карточка по указанному _id не найдена'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
-//   else {
-//     res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
-//   }
-// };
 
-module.exports.dislikeCard = (req, res) => {
-  // if (req.params.cardId.length === 24) {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
     .populate('owner')
     .orFail()
@@ -78,15 +68,11 @@ module.exports.dislikeCard = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(400).send({ message: 'Некоректный _id' });
+        next(new BadRequestError('Некорректный id карточки'));
       } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+        next(new NotFoundError('Карточка по указанному _id не найдена'));
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        next(err);
       }
     });
 };
-//   else {
-//     res.status(400).send({ message: 'Карточка с указанным _id не найдена' });
-//   }
-// };
