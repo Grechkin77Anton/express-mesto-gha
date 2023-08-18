@@ -5,8 +5,6 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFoundErr');
 const ConflictError = require('../errors/conflictError');
-// const ForbiddenError = require('../errors/forbiddenError');
-// const Unauthorized = require('../errors/unauthorizedError');
 
 module.exports.createUser = (req, res, next) => {
   const {
