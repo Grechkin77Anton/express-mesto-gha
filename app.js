@@ -12,7 +12,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // за 15 минут
   max: 100, // можно совершить максимум 100 запросов с одного IP
 });
-// подключаем rate-limiter
+
 app.use(limiter);
 
 app.use(helmet());
@@ -28,6 +28,6 @@ app.use('/', require('./routes/index'));
 
 app.use(errors());
 
-app.use(errorHandler);
+// app.use(errorHandler);
 
 app.listen(PORT);
